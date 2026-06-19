@@ -1,1 +1,32 @@
+class VentanaConfirmacion(QWidget):
+    def __init__(self, nombre, servicio):
+        super().__init__()
+        self.setWindowTitle("Paso 3: Confirmación")
+        self.setGeometry(300, 300, 500, 300)
+        
+        layout = QVBoxLayout()
+        titulo = QLabel("✅ ¡Guardado en la Base de Datos!")
+        subtitulo = QLabel("Gracias por confiar en RapiMed. Hemos registrado su solicitud y nuestro equipo se pondrá en contacto con usted lo antes posible para brindarle la atención que necesita. ¡Su salud es nuestra prioridad!")
+        subtitulo.setAlignment(Qt.AlignCenter)
+        subtitulo.setWordWrap(True)
+        titulo.setFont(QFont("Arial", 14, QFont.Bold))
+        
+        resumen = QLabel(f"Paciente: {nombre}\nServicio: {servicio}")
+        
+        btn_salir = QPushButton("Cerrar Sistema")
+        btn_salir.clicked.connect(self.close)
+        
+        layout.addWidget(titulo)
+        layout.addWidget(subtitulo)
+        layout.addWidget(resumen)
+        layout.addWidget(btn_salir)
+        self.setLayout(layout)
 
+if __name__ == '__main__':
+    inicializar_bd()
+    app = QApplication(sys.argv)
+    
+    ventana_principal = VentanaRegistro()
+    ventana_principal.show()
+    
+    sys.exit(app.exec_())
