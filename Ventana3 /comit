@@ -1,32 +1,72 @@
-class VentanaConfirmacion(QWidget):
-    def __init__(self, nombre, servicio):
-        super().__init__()
-        self.setWindowTitle("Paso 3: Confirmación")
-        self.setGeometry(300, 300, 500, 300)
-        
-        layout = QVBoxLayout()
-        titulo = QLabel("✅ ¡Guardado en la Base de Datos!")
-        subtitulo = QLabel("Gracias por confiar en RapiMed. Hemos registrado su solicitud y nuestro equipo se pondrá en contacto con usted lo antes posible para brindarle la atención que necesita. ¡Su salud es nuestra prioridad!")
-        subtitulo.setAlignment(Qt.AlignCenter)
-        subtitulo.setWordWrap(True)
-        titulo.setFont(QFont("Arial", 14, QFont.Bold))
-        
-        resumen = QLabel(f"Paciente: {nombre}\nServicio: {servicio}")
-        
-        btn_salir = QPushButton("Cerrar Sistema")
-        btn_salir.clicked.connect(self.close)
-        
-        layout.addWidget(titulo)
-        layout.addWidget(subtitulo)
-        layout.addWidget(resumen)
-        layout.addWidget(btn_salir)
-        self.setLayout(layout)
-
-if __name__ == '__main__':
-    inicializar_bd()
-    app = QApplication(sys.argv)
-    
-    ventana_principal = VentanaRegistro()
-    ventana_principal.show()
-    
-    sys.exit(app.exec_())
+class VentanaMedicamentos(QWidget):  
+    def __init__(self, main_window):  
+        super().__init__()  
+        self.main = main_window  
+        layout = QVBoxLayout()  
+          
+        titulo = QLabel("💊 Inventario de Medicamentos")  
+        titulo.setFont(QFont("Segoe UI", 16, QFont.Bold))  
+        titulo.setAlignment(Qt.AlignCenter)  
+          
+        instrucciones = QLabel("Seleccione los medicamentos que requiere. Puede marcar varios:")  
+        instrucciones.setWordWrap(True)  
+          
+        self.checkboxes = []  
+        lista_comunes = ["Paracetamol 500mg", "Ibuprofeno 400mg", "Amoxicilina 500mg",   
+                         "Omeprazol 20mg", "Losartán 50mg", "Loratadina 10mg", "Atamel Forte 650mg", "Metformina 850mg"]  
+          
+        layout.addStretch()  
+        layout.addWidget(titulo)  
+        layout.addWidget(instrucciones)  
+        layout.addSpacing(15)  
+          
+        for med in lista_comunes:  
+            chk = QCheckBox(med)  
+            self.checkboxes.append(chk)  
+            layout.addWidget(chk)  
+              
+        layout.addSpacing(15)  
+          
+        self.chk_contacto = QCheckBox("Mi medicamento no está en la lista. \nQuiero que me contacten para más información.")  
+        self.chk_contacto.setStyleSheet("font-weight: bold; color: #d35400;") # Naranja oscuro  
+        layout.addWidget(self.chk_contacto)  
+          
+        btn_continuar = QPushButton("Guardar y Continuar ➔")  
+        btn_continuar.clicked.connect(self.procesar_medicamentos)  
+          
+        layout.addSpacing(20)  
+        layout.addWidget(btn_continuar)  
+        layout.addStretch()  
+          
+        self.setLayout(layout)  
+  
+    def procesar_medicamentos(self):  
+        seleccionados = []  
+        for chk in self.checkboxes:  
+            if chk.isChecked():  
+                seleccionados.append(chk.text())  
+                  
+        if self.chk_contacto.isChecked():  
+            seleccionados.append("Requiere Contacto Especializado")  
+              
+        if len(seleccionados) == 0:  
+            QMessageBox.warning(self, "Aviso", "Por favor, seleccione al menos una opción.")  
+            return  
+              
+        texto_servicio = "Medicamentos: " + ", ".join(seleccionados)  
+          
+        datos = self.main.datos_paciente  
+        conexion = sqlite3.connect("clinica.db")  
+        cursor = conexion.cursor()  
+        cursor.execute("INSERT INTO citas (nombre, cedula, telefono, servicio) VALUES (?, ?, ?, ?)",   
+                       (datos['nombre'], datos['cedula'], datos['telefono'], texto_servicio))  
+        conexion.commit()  
+        conexion.close()  
+          
+        self.main.ventana_confirmacion.actualizar_texto(datos['nombre'], texto_servicio)  
+          
+        for chk in self.checkboxes:  
+            chk.setChecked(False)  
+        self.chk_contacto.setChecked(False)  
+          
+        self.main.stack.setCurrentIndex(3)
