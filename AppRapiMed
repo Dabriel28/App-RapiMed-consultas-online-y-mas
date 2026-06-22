@@ -1,7 +1,8 @@
 import sys
 import sqlite3
-from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, 
-                             QPushButton, QLabel, QLineEdit, QMessageBox)
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,   
+                             QPushButton, QLabel, QLineEdit, QStackedWidget,   
+                             QMessageBox, QCheckBox, QHBoxLayout)
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
 
@@ -18,15 +19,15 @@ def inicializar_bd():
     conexion.close()
 
 class VentanaRegistro(QWidget):
-    def __init__(self):
+    def __init__(self, main_window):
         super().__init__()
-        self.setWindowTitle("Paso 1: Registro")
-        self.setGeometry(300, 300, 600, 550)
+        self.main = main_window
+        #self.setWindowTitle("Paso 1: Registro")
         
         layout = QVBoxLayout()
         subtitulo = QLabel("Bienvenido/a a RapiMed donde podrás agendar tu cita medica, solicitar medicamentos o pedir una ambulancia en caso de ser necesario de forma rapida y sencilla. Contamos con un equipo de profesionales altamente capacitados y comprometidos con tu bienestar. ¡Tu salud es nuestra prioridad!")
         titulo = QLabel("🏥 RapiMed")
-        titulo.setFont(QFont("Arial", 16, QFont.Bold))
+        titulo.setFont(QFont("Segoe UI", 20, QFont.Bold))
         titulo.setAlignment(Qt.AlignCenter)
         subtitulo.setAlignment(Qt.AlignCenter)
         subtitulo.setWordWrap(True)
@@ -38,102 +39,284 @@ class VentanaRegistro(QWidget):
         self.input_telefono.setPlaceholderText("Teléfono")
         
         btn_siguiente = QPushButton("Continuar ->")
-        btn_siguiente.clicked.connect(self.abrir_servicios)
-        
-        layout.addWidget(titulo)
-        layout.addWidget(subtitulo)
-        layout.addWidget(self.input_nombre)
-        layout.addWidget(self.input_cedula)
-        layout.addWidget(self.input_telefono)
-        layout.addWidget(btn_siguiente)
-        self.setLayout(layout)
-
-    def abrir_servicios(self):
-        nombre = self.input_nombre.text()
-        cedula = self.input_cedula.text()
-        telefono = self.input_telefono.text()
-        
-        if not nombre or not cedula or not telefono:
-            QMessageBox.warning(self, "Error", "Complete todos los campos.")
-            return
-            
-        datos = {"nombre": nombre, "cedula": cedula, "telefono": telefono}
-        
-        self.ventana2 = VentanaServicios(datos)
-        self.ventana2.show()
-        self.close()
+        btn_siguiente.clicked.connect(self.validar_y_continuar)  
+          
+        layout.addStretch()
+        layout.addWidget(subtitulo) 
+        layout.addWidget(titulo)  
+        layout.addSpacing(20)  
+        layout.addWidget(QLabel("Nombre completo:"))  
+        layout.addWidget(self.input_nombre)  
+        layout.addWidget(QLabel("Documento de Identidad:"))  
+        layout.addWidget(self.input_cedula)  
+        layout.addWidget(QLabel("Teléfono de contacto:"))  
+        layout.addWidget(self.input_telefono)  
+        layout.addSpacing(20)  
+        layout.addWidget(btn_siguiente)  
+        layout.addStretch()  
+          
+        self.setLayout(layout)  
+  
+    def validar_y_continuar(self):  
+        nombre = self.input_nombre.text()  
+        cedula = self.input_cedula.text()  
+        telefono = self.input_telefono.text()  
+          
+        if nombre == "" or cedula == "" or telefono == "":  
+            QMessageBox.warning(self, "Error", "Por favor, complete todos los campos.")  
+            return  
+              
+        self.main.datos_paciente = {  
+            "nombre": nombre,  
+            "cedula": cedula,  
+            "telefono": telefono  
+        }  
+        self.main.stack.setCurrentIndex(1)
 
 class VentanaServicios(QWidget):
-    def __init__(self, datos_paciente):
+    def __init__(self, main_window):
         super().__init__()
-        self.datos = datos_paciente 
-        
-        self.setWindowTitle("Paso 2: Servicios")
-        self.setGeometry(250, 250, 500, 400)
+        self.main = main_window
+
+        #self.setWindowTitle("Paso 2: Servicios")
         
         layout = QVBoxLayout()
-        titulo = QLabel(f"Hola {self.datos['nombre']}, por favor elija su requerimiento:")
+        titulo = QLabel("Haga clic en la opción que necesita para continuar con su solicitud.")
         subtitulo = QLabel("En RapiMed ofrecemos una atención rápida y eficiente para que puedas acceder a los servicios que necesitas sin complicaciones. Nuestro objetivo es brindarte una experiencia cómoda y segura, asegurando que recibas la atención médica que mereces en el momento que lo necesites.")
         subtitulo.setAlignment(Qt.AlignCenter)
         subtitulo.setWordWrap(True)
-        titulo.setFont(QFont("Arial", 12, QFont.Bold))
+        titulo.setFont(QFont("Segoe UI", 18, QFont.Bold))
         
-        btn_patologia = QPushButton("🩺 Patología")
-        btn_medicamentos = QPushButton("💊 Medicamentos")
-        btn_ambulancia = QPushButton("🚑 Ambulancia")
+        btn_patologia = QPushButton("🩺 Patología consulta en línea")  
+        btn_medicamentos = QPushButton("💊 Solicitud de Medicamentos")  
+        btn_ambulancia = QPushButton("🚑 EMERGENCIA: Pedir Ambulancia")
+        btn_ambulancia.setObjectName("btnEmergencia")
+        btn_patologia.clicked.connect(lambda: self.guardar_y_finalizar("Cita para Patología"))  
+        btn_ambulancia.clicked.connect(lambda: self.guardar_y_finalizar("Ambulancia de Emergencia"))
+        btn_medicamentos.clicked.connect(lambda: self.main.stack.setCurrentIndex(2))
         
-        btn_patologia.clicked.connect(lambda: self.guardar_y_avanzar("Patología"))
-        btn_medicamentos.clicked.connect(lambda: self.guardar_y_avanzar("Medicamentos"))
-        btn_ambulancia.clicked.connect(lambda: self.guardar_y_avanzar("Ambulancia"))
-        
+        layout.addStretch()
         layout.addWidget(titulo)
         layout.addWidget(subtitulo)
+        layout.addSpacing(30)
         layout.addWidget(btn_patologia)
         layout.addWidget(btn_medicamentos)
+        layout.addSpacing(10)
         layout.addWidget(btn_ambulancia)
+        layout.addStretch()
         self.setLayout(layout)
 
-    def guardar_y_avanzar(self, servicio):
-        conexion = sqlite3.connect("clinica.db")
-        cursor = conexion.cursor()
-        cursor.execute("INSERT INTO citas (nombre, cedula, telefono, servicio) VALUES (?, ?, ?, ?)", 
-                       (self.datos['nombre'], self.datos['cedula'], self.datos['telefono'], servicio))
-        conexion.commit()
-        conexion.close()
+    def guardar_y_finalizar(self, servicio_elegido):
+        datos = self.main.datos_paciente  
+        conexion = sqlite3.connect("clinica.db")  
+        cursor = conexion.cursor()  
+        cursor.execute("INSERT INTO citas (nombre, cedula, telefono, servicio) VALUES (?, ?, ?, ?)",   
+                       (datos['nombre'], datos['cedula'], datos['telefono'], servicio_elegido))  
+        conexion.commit()  
+        conexion.close()  
+          
+        self.main.ventana_confirmacion.actualizar_texto(datos['nombre'], servicio_elegido)  
+        self.main.stack.setCurrentIndex(3)
         
-        self.ventana3 = VentanaConfirmacion(self.datos['nombre'], servicio)
-        self.ventana3.show()
-        self.close() 
+class VentanaMedicamentos(QWidget):  
+    def __init__(self, main_window):  
+        super().__init__()  
+        self.main = main_window  
+        layout = QVBoxLayout()  
+          
+        titulo = QLabel("💊 Inventario de Medicamentos")  
+        titulo.setFont(QFont("Segoe UI", 16, QFont.Bold))  
+        titulo.setAlignment(Qt.AlignCenter)  
+          
+        instrucciones = QLabel("Seleccione los medicamentos que requiere. Puede marcar varios:")  
+        instrucciones.setWordWrap(True)  
+          
+        self.checkboxes = []  
+        lista_comunes = ["Paracetamol 500mg", "Ibuprofeno 400mg", "Amoxicilina 500mg",   
+                         "Omeprazol 20mg", "Losartán 50mg", "Loratadina 10mg", "Atamel Forte 650mg", "Metformina 850mg"]  
+          
+        layout.addStretch()  
+        layout.addWidget(titulo)  
+        layout.addWidget(instrucciones)  
+        layout.addSpacing(15)  
+          
+        for med in lista_comunes:  
+            chk = QCheckBox(med)  
+            self.checkboxes.append(chk)  
+            layout.addWidget(chk)  
+              
+        layout.addSpacing(15)  
+          
+        self.chk_contacto = QCheckBox("Mi medicamento no está en la lista. \nQuiero que me contacten para más información.")  
+        self.chk_contacto.setStyleSheet("font-weight: bold; color: #d35400;") # Naranja oscuro  
+        layout.addWidget(self.chk_contacto)  
+          
+        btn_continuar = QPushButton("Guardar y Continuar ➔")  
+        btn_continuar.clicked.connect(self.procesar_medicamentos)  
+          
+        layout.addSpacing(20)  
+        layout.addWidget(btn_continuar)  
+        layout.addStretch()  
+          
+        self.setLayout(layout)  
+  
+    def procesar_medicamentos(self):  
+        seleccionados = []  
+        for chk in self.checkboxes:  
+            if chk.isChecked():  
+                seleccionados.append(chk.text())  
+                  
+        if self.chk_contacto.isChecked():  
+            seleccionados.append("Requiere Contacto Especializado")  
+              
+        if len(seleccionados) == 0:  
+            QMessageBox.warning(self, "Aviso", "Por favor, seleccione al menos una opción.")  
+            return  
+              
+        texto_servicio = "Medicamentos: " + ", ".join(seleccionados)  
+          
+        datos = self.main.datos_paciente  
+        conexion = sqlite3.connect("clinica.db")  
+        cursor = conexion.cursor()  
+        cursor.execute("INSERT INTO citas (nombre, cedula, telefono, servicio) VALUES (?, ?, ?, ?)",   
+                       (datos['nombre'], datos['cedula'], datos['telefono'], texto_servicio))  
+        conexion.commit()  
+        conexion.close()  
+          
+        self.main.ventana_confirmacion.actualizar_texto(datos['nombre'], texto_servicio)  
+          
+        for chk in self.checkboxes:  
+            chk.setChecked(False)  
+        self.chk_contacto.setChecked(False)  
+          
+        self.main.stack.setCurrentIndex(3)
 
 class VentanaConfirmacion(QWidget):
-    def __init__(self, nombre, servicio):
+    def __init__(self, main_window):
         super().__init__()
-        self.setWindowTitle("Paso 3: Confirmación")
-        self.setGeometry(300, 300, 500, 300)
+        self.main = main_window
+        #self.setWindowTitle("Paso 3: Confirmación")
         
         layout = QVBoxLayout()
-        titulo = QLabel("✅ ¡Guardado en la Base de Datos!")
+        titulo = QLabel("✅ ¡Solicitud Procesada!")
         subtitulo = QLabel("Gracias por confiar en RapiMed. Hemos registrado su solicitud y nuestro equipo se pondrá en contacto con usted lo antes posible para brindarle la atención que necesita. ¡Su salud es nuestra prioridad!")
         subtitulo.setAlignment(Qt.AlignCenter)
         subtitulo.setWordWrap(True)
-        titulo.setFont(QFont("Arial", 14, QFont.Bold))
+        titulo.setFont(QFont("Segoe UI", 18, QFont.Bold))
+                
+        self.lbl_resumen = QLabel("")  
+        self.lbl_resumen.setAlignment(Qt.AlignCenter)  
+        self.lbl_resumen.setFont(QFont("Segoe UI", 12))  
+        self.lbl_resumen.setWordWrap(True)  
+          
+        btn_finalizar = QPushButton("Finalizar y Volver al Inicio")  
+        btn_finalizar.clicked.connect(self.reiniciar_app)  
+          
+        layout.addStretch()  
+        layout.addWidget(titulo)  
+        layout.addSpacing(20)  
+        layout.addWidget(self.lbl_resumen)  
+        layout.addSpacing(30)  
+        layout.addWidget(btn_finalizar)  
+        layout.addStretch()  
+          
+        self.setLayout(layout)  
+  
+    def actualizar_texto(self, nombre, servicio):  
+        texto = f"Paciente: {nombre}\n\nDetalle Registrado:\n{servicio}\n\nLa información ha sido guardada exitosamente en el sistema. \nNuestro equipo se comunicará con usted en la brevedad posible para coordinar los próximos pasos. ¡Gracias por elegir RapiMed!"  
+        self.lbl_resumen.setText(texto)  
+          
+    def reiniciar_app(self):  
+        self.main.ventana_registro.input_nombre.clear()  
+        self.main.ventana_registro.input_cedula.clear()  
+        self.main.ventana_registro.input_telefono.clear()  
+        self.main.stack.setCurrentIndex(0)
         
-        resumen = QLabel(f"Paciente: {nombre}\nServicio: {servicio}")
-        
-        btn_salir = QPushButton("Cerrar Sistema")
-        btn_salir.clicked.connect(self.close)
-        
-        layout.addWidget(titulo)
-        layout.addWidget(subtitulo)
-        layout.addWidget(resumen)
-        layout.addWidget(btn_salir)
-        self.setLayout(layout)
+class AppMedica(QMainWindow):  
+    def __init__(self):  
+        super().__init__()  
+        self.setWindowTitle("Sistema Interactivo - Centro Médico")  
+        self.setGeometry(200, 200, 500, 550)
+          
+        self.datos_paciente = {}   
+          
+        self.stack = QStackedWidget()  
+        self.setCentralWidget(self.stack)  
+          
+        self.ventana_registro = VentanaRegistro(self)  
+        self.ventana_servicios = VentanaServicios(self)  
+        self.ventana_medicamentos = VentanaMedicamentos(self) 
+        self.ventana_confirmacion = VentanaConfirmacion(self)  
+          
+        self.stack.addWidget(self.ventana_registro)
+        self.stack.addWidget(self.ventana_servicios)
+        self.stack.addWidget(self.ventana_medicamentos) 
+        self.stack.addWidget(self.ventana_confirmacion)
+         
+hoja_de_estilos = """  
+    /* Fondo general de la aplicación (Azul muy claro/Grisáceo médico) */  
+    QMainWindow, QStackedWidget, QWidget {  
+        background-color: #f0f8ff;   
+    }  
+      
+    /* Estilo de todos los textos */  
+    QLabel {  
+        color: #2c3e50;  
+    }  
+      
+    /* Estilo para las cajas de texto donde escribe el usuario */  
+    QLineEdit {  
+        background-color: white;  
+        border: 2px solid #bdc3c7;  
+        border-radius: 6px;  
+        padding: 8px;  
+        font-size: 14px;  
+        color: #333;  
+    }  
+    QLineEdit:focus {  
+        border: 2px solid #3498db; /* Cambia a azul al hacer clic */  
+    }  
+      
+    /* Estilo general para todos los botones */  
+    QPushButton {  
+        background-color: #3498db;  
+        color: white;  
+        border: none;  
+        border-radius: 8px;  
+        padding: 12px;  
+        font-size: 14px;  
+        font-weight: bold;  
+    }  
+    QPushButton:hover {  
+        background-color: #2980b9; /* Se oscurece un poco al pasar el ratón */  
+    }  
+      
+    /* Estilo exclusivo para el botón de emergencia */  
+    QPushButton#btnEmergencia {  
+        background-color: #e74c3c;  
+    }  
+    QPushButton#btnEmergencia:hover {  
+        background-color: #c0392b;  
+    }  
+      
+    /* Estilo de las casillas de verificación (Checkboxes) */  
+    QCheckBox {  
+        font-size: 14px;  
+        color: #2c3e50;  
+        padding: 4px;  
+    }  
+    QCheckBox::indicator {  
+        width: 18px;  
+        height: 18px;  
+    }  
+"""
 
 if __name__ == '__main__':
     inicializar_bd()
     app = QApplication(sys.argv)
+    app.setStyleSheet(hoja_de_estilos)
     
-    ventana_principal = VentanaRegistro()
+    ventana_principal = AppMedica()
     ventana_principal.show()
     
     sys.exit(app.exec_())
