@@ -1,41 +1,44 @@
 class VentanaServicios(QWidget):
-    def __init__(self, datos_paciente):
+    def __init__(self, main_window):
         super().__init__()
-        self.datos = datos_paciente # Guardamos los datos que nos mandó la Ventana 1
-        
-        self.setWindowTitle("Paso 2: Servicios")
-        self.setGeometry(250, 250, 500, 400)
+        self.main = main_window
+
+        #self.setWindowTitle("Paso 2: Servicios")
         
         layout = QVBoxLayout()
-        titulo = QLabel(f"Hola {self.datos['nombre']}, por favor elija su requerimiento:")
+        titulo = QLabel("Haga clic en la opción que necesita para continuar con su solicitud.")
         subtitulo = QLabel("En RapiMed ofrecemos una atención rápida y eficiente para que puedas acceder a los servicios que necesitas sin complicaciones. Nuestro objetivo es brindarte una experiencia cómoda y segura, asegurando que recibas la atención médica que mereces en el momento que lo necesites.")
         subtitulo.setAlignment(Qt.AlignCenter)
         subtitulo.setWordWrap(True)
-        titulo.setFont(QFont("Arial", 12, QFont.Bold))
+        titulo.setFont(QFont("Segoe UI", 18, QFont.Bold))
         
-        btn_patologia = QPushButton("🩺 Patología")
-        btn_medicamentos = QPushButton("💊 Medicamentos")
-        btn_ambulancia = QPushButton("🚑 Ambulancia")
+        btn_patologia = QPushButton("🩺 Patología consulta en línea")  
+        btn_medicamentos = QPushButton("💊 Solicitud de Medicamentos")  
+        btn_ambulancia = QPushButton("🚑 EMERGENCIA: Pedir Ambulancia")
+        btn_ambulancia.setObjectName("btnEmergencia")
+        btn_patologia.clicked.connect(lambda: self.guardar_y_finalizar("Cita para Patología"))  
+        btn_ambulancia.clicked.connect(lambda: self.guardar_y_finalizar("Ambulancia de Emergencia"))
+        btn_medicamentos.clicked.connect(lambda: self.main.stack.setCurrentIndex(2))
         
-        btn_patologia.clicked.connect(lambda: self.guardar_y_avanzar("Patología"))
-        btn_medicamentos.clicked.connect(lambda: self.guardar_y_avanzar("Medicamentos"))
-        btn_ambulancia.clicked.connect(lambda: self.guardar_y_avanzar("Ambulancia"))
-        
+        layout.addStretch()
         layout.addWidget(titulo)
         layout.addWidget(subtitulo)
+        layout.addSpacing(30)
         layout.addWidget(btn_patologia)
         layout.addWidget(btn_medicamentos)
+        layout.addSpacing(10)
         layout.addWidget(btn_ambulancia)
+        layout.addStretch()
         self.setLayout(layout)
 
-    def guardar_y_avanzar(self, servicio):
-        conexion = sqlite3.connect("clinica.db")
-        cursor = conexion.cursor()
-        cursor.execute("INSERT INTO citas (nombre, cedula, telefono, servicio) VALUES (?, ?, ?, ?)", 
-                       (self.datos['nombre'], self.datos['cedula'], self.datos['telefono'], servicio))
-        conexion.commit()
-        conexion.close()
-        
-        self.ventana3 = VentanaConfirmacion(self.datos['nombre'], servicio)
-        self.ventana3.show()
-        self.close()
+    def guardar_y_finalizar(self, servicio_elegido):
+        datos = self.main.datos_paciente  
+        conexion = sqlite3.connect("clinica.db")  
+        cursor = conexion.cursor()  
+        cursor.execute("INSERT INTO citas (nombre, cedula, telefono, servicio) VALUES (?, ?, ?, ?)",   
+                       (datos['nombre'], datos['cedula'], datos['telefono'], servicio_elegido))  
+        conexion.commit()  
+        conexion.close()  
+          
+        self.main.ventana_confirmacion.actualizar_texto(datos['nombre'], servicio_elegido)  
+        self.main.stack.setCurrentIndex(3)
