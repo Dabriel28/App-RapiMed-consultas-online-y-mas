@@ -6,9 +6,6 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
 
-# ==========================================
-# BASE DE DATOS
-# ==========================================
 def inicializar_bd():
     conexion = sqlite3.connect("clinica.db")
     cursor = conexion.cursor()
@@ -21,9 +18,6 @@ def inicializar_bd():
     conexion.commit()
     conexion.close()
 
-# ==========================================
-# VENTANA 1: 
-# ==========================================
 class VentanaRegistro(QWidget):
     def __init__(self, main_window):
         super().__init__()
