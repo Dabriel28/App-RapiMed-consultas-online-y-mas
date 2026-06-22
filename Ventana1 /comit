@@ -1,10 +1,14 @@
 import sys
 import sqlite3
-from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, 
-                             QPushButton, QLabel, QLineEdit, QMessageBox)
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,   
+                             QPushButton, QLabel, QLineEdit, QStackedWidget,   
+                             QMessageBox, QCheckBox, QHBoxLayout)
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
 
+# ==========================================
+# BASE DE DATOS
+# ==========================================
 def inicializar_bd():
     conexion = sqlite3.connect("clinica.db")
     cursor = conexion.cursor()
@@ -17,16 +21,19 @@ def inicializar_bd():
     conexion.commit()
     conexion.close()
 
+# ==========================================
+# VENTANA 1: 
+# ==========================================
 class VentanaRegistro(QWidget):
-    def __init__(self):
+    def __init__(self, main_window):
         super().__init__()
-        self.setWindowTitle("Paso 1: Registro")
-        self.setGeometry(300, 300, 600, 550)
+        self.main = main_window
+        #self.setWindowTitle("Paso 1: Registro")
         
         layout = QVBoxLayout()
         subtitulo = QLabel("Bienvenido/a a RapiMed donde podrás agendar tu cita medica, solicitar medicamentos o pedir una ambulancia en caso de ser necesario de forma rapida y sencilla. Contamos con un equipo de profesionales altamente capacitados y comprometidos con tu bienestar. ¡Tu salud es nuestra prioridad!")
         titulo = QLabel("🏥 RapiMed")
-        titulo.setFont(QFont("Arial", 16, QFont.Bold))
+        titulo.setFont(QFont("Segoe UI", 20, QFont.Bold))
         titulo.setAlignment(Qt.AlignCenter)
         subtitulo.setAlignment(Qt.AlignCenter)
         subtitulo.setWordWrap(True)
@@ -38,27 +45,36 @@ class VentanaRegistro(QWidget):
         self.input_telefono.setPlaceholderText("Teléfono")
         
         btn_siguiente = QPushButton("Continuar ->")
-        btn_siguiente.clicked.connect(self.abrir_servicios)
-        
-        layout.addWidget(titulo)
-        layout.addWidget(subtitulo)
-        layout.addWidget(self.input_nombre)
-        layout.addWidget(self.input_cedula)
-        layout.addWidget(self.input_telefono)
-        layout.addWidget(btn_siguiente)
-        self.setLayout(layout)
-
-    def abrir_servicios(self):
-        nombre = self.input_nombre.text()
-        cedula = self.input_cedula.text()
-        telefono = self.input_telefono.text()
-        
-        if not nombre or not cedula or not telefono:
-            QMessageBox.warning(self, "Error", "Complete todos los campos.")
-            return
-            
-        datos = {"nombre": nombre, "cedula": cedula, "telefono": telefono}
-        
-        self.ventana2 = VentanaServicios(datos)
-        self.ventana2.show()
-        self.close()
+        btn_siguiente.clicked.connect(self.validar_y_continuar)  
+          
+        layout.addStretch()
+        layout.addWidget(subtitulo) 
+        layout.addWidget(titulo)  
+        layout.addSpacing(20)  
+        layout.addWidget(QLabel("Nombre completo:"))  
+        layout.addWidget(self.input_nombre)  
+        layout.addWidget(QLabel("Documento de Identidad:"))  
+        layout.addWidget(self.input_cedula)  
+        layout.addWidget(QLabel("Teléfono de contacto:"))  
+        layout.addWidget(self.input_telefono)  
+        layout.addSpacing(20)  
+        layout.addWidget(btn_siguiente)  
+        layout.addStretch()  
+          
+        self.setLayout(layout)  
+  
+    def validar_y_continuar(self):  
+        nombre = self.input_nombre.text()  
+        cedula = self.input_cedula.text()  
+        telefono = self.input_telefono.text()  
+          
+        if nombre == "" or cedula == "" or telefono == "":  
+            QMessageBox.warning(self, "Error", "Por favor, complete todos los campos.")  
+            return  
+              
+        self.main.datos_paciente = {  
+            "nombre": nombre,  
+            "cedula": cedula,  
+            "telefono": telefono  
+        }  
+        self.main.stack.setCurrentIndex(1)
