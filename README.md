@@ -1,1 +1,2 @@
-Desarrollo de aplicacion de escritorio, para el proyecto final del curso (aun no tengo idea de que voy a desarrollar pero lo hare).
+Una app diseñada para bridar asistencia médica rápida y sencilla, permitiendo que los usuarios tengan acceso a consultas en línea, solicitudes de medicamentos y en caso de ser necesario ambulancias, tiene una interfás intuitiva que facilita su manejo con opciones que cualquier persona puede entender facilmente.
+Contamos con una amplia gama de centros médicos y clínicas de todo el país que nos permite garantizar la mejor atención en todo momento.
