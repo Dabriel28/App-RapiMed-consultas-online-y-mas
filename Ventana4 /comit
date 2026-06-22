@@ -1,1 +1,129 @@
+class VentanaConfirmacion(QWidget):
+    def __init__(self, main_window):
+        super().__init__()
+        self.main = main_window
+        #self.setWindowTitle("Paso 3: Confirmación")
+        
+        layout = QVBoxLayout()
+        titulo = QLabel("✅ ¡Solicitud Procesada!")
+        subtitulo = QLabel("Gracias por confiar en RapiMed. Hemos registrado su solicitud y nuestro equipo se pondrá en contacto con usted lo antes posible para brindarle la atención que necesita. ¡Su salud es nuestra prioridad!")
+        subtitulo.setAlignment(Qt.AlignCenter)
+        subtitulo.setWordWrap(True)
+        titulo.setFont(QFont("Segoe UI", 18, QFont.Bold))
+                
+        self.lbl_resumen = QLabel("")  
+        self.lbl_resumen.setAlignment(Qt.AlignCenter)  
+        self.lbl_resumen.setFont(QFont("Segoe UI", 12))  
+        self.lbl_resumen.setWordWrap(True)  
+          
+        btn_finalizar = QPushButton("Finalizar y Volver al Inicio")  
+        btn_finalizar.clicked.connect(self.reiniciar_app)  
+          
+        layout.addStretch()  
+        layout.addWidget(titulo)  
+        layout.addSpacing(20)  
+        layout.addWidget(self.lbl_resumen)  
+        layout.addSpacing(30)  
+        layout.addWidget(btn_finalizar)  
+        layout.addStretch()  
+          
+        self.setLayout(layout)  
+  
+    def actualizar_texto(self, nombre, servicio):  
+        texto = f"Paciente: {nombre}\n\nDetalle Registrado:\n{servicio}\n\nLa información ha sido guardada exitosamente en el sistema. \nNuestro equipo se comunicará con usted en la brevedad posible para coordinar los próximos pasos. ¡Gracias por elegir RapiMed!"  
+        self.lbl_resumen.setText(texto)  
+          
+    def reiniciar_app(self):  
+        self.main.ventana_registro.input_nombre.clear()  
+        self.main.ventana_registro.input_cedula.clear()  
+        self.main.ventana_registro.input_telefono.clear()  
+        self.main.stack.setCurrentIndex(0)
+        
+class AppMedica(QMainWindow):  
+    def __init__(self):  
+        super().__init__()  
+        self.setWindowTitle("Sistema Interactivo - Centro Médico")  
+        self.setGeometry(200, 200, 500, 550)
+          
+        self.datos_paciente = {}   
+          
+        self.stack = QStackedWidget()  
+        self.setCentralWidget(self.stack)  
+          
+        self.ventana_registro = VentanaRegistro(self)  
+        self.ventana_servicios = VentanaServicios(self)  
+        self.ventana_medicamentos = VentanaMedicamentos(self) 
+        self.ventana_confirmacion = VentanaConfirmacion(self)  
+          
+        self.stack.addWidget(self.ventana_registro)
+        self.stack.addWidget(self.ventana_servicios)
+        self.stack.addWidget(self.ventana_medicamentos) 
+        self.stack.addWidget(self.ventana_confirmacion)
+        
+hoja_de_estilos = """  
+    /* Fondo general de la aplicación (Azul muy claro/Grisáceo médico) */  
+    QMainWindow, QStackedWidget, QWidget {  
+        background-color: #f0f8ff;   
+    }  
+      
+    /* Estilo de todos los textos */  
+    QLabel {  
+        color: #2c3e50;  
+    }  
+      
+    /* Estilo para las cajas de texto donde escribe el usuario */  
+    QLineEdit {  
+        background-color: white;  
+        border: 2px solid #bdc3c7;  
+        border-radius: 6px;  
+        padding: 8px;  
+        font-size: 14px;  
+        color: #333;  
+    }  
+    QLineEdit:focus {  
+        border: 2px solid #3498db; /* Cambia a azul al hacer clic */  
+    }  
+      
+    /* Estilo general para todos los botones */  
+    QPushButton {  
+        background-color: #3498db;  
+        color: white;  
+        border: none;  
+        border-radius: 8px;  
+        padding: 12px;  
+        font-size: 14px;  
+        font-weight: bold;  
+    }  
+    QPushButton:hover {  
+        background-color: #2980b9; /* Se oscurece un poco al pasar el ratón */  
+    }  
+      
+    /* Estilo exclusivo para el botón de emergencia */  
+    QPushButton#btnEmergencia {  
+        background-color: #e74c3c;  
+    }  
+    QPushButton#btnEmergencia:hover {  
+        background-color: #c0392b;  
+    }  
+      
+    /* Estilo de las casillas de verificación (Checkboxes) */  
+    QCheckBox {  
+        font-size: 14px;  
+        color: #2c3e50;  
+        padding: 4px;  
+    }  
+    QCheckBox::indicator {  
+        width: 18px;  
+        height: 18px;  
+    }  
+"""
 
+if __name__ == '__main__':
+    inicializar_bd()
+    app = QApplication(sys.argv)
+    app.setStyleSheet(hoja_de_estilos)
+    
+    ventana_principal = AppMedica()
+    ventana_principal.show()
+    
+    sys.exit(app.exec_())
